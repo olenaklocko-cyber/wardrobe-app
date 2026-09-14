@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Онлайн-Гардероб</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; background: #F9F9F7; min-height: 100vh; padding-bottom: 80px; }
+        .header { text-align: center; padding: 20px; }
+        .header h1 { font-size: 24px; font-weight: 900; color: #E65F2B; }
+        .header p { font-size: 13px; color: #999; }
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; display: flex; border-top: 1px solid #eee; z-index: 100; }
+        .nav-btn { flex: 1; padding: 12px 8px; text-align: center; background: none; border: none; font-family: inherit; cursor: pointer; }
+        .nav-btn.active { color: #E65F2B; }
+        .nav-btn .icon { font-size: 22px; display: block; }
+        .nav-btn .label { font-size: 10px; font-weight: 600; color: #999; }
+        .nav-btn.active .label { color: #E65F2B; }
+        .section { display: none; padding: 16px; }
+        .section.active { display: block; }
+        .filters { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; }
+        .filters::-webkit-scrollbar { display: none; }
+        .filter { padding: 8px 14px; border-radius: 20px; border: 2px solid #eee; background: #fff; font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .filter.active { border-color: #E65F2B; background: #FFF0E8; color: #E65F2B; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .card { background: #fff; border-radius: 14px; padding: 14px 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); cursor: pointer; }
+        .card-img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-bottom: 6px; }
+        .card-emoji { font-size: 36px; margin-bottom: 6px; }
+        .card-name { font-size: 11px; font-weight: 600; }
+        .card-color { font-size: 10px; color: #999; margin-top: 2px; }
+        .add-btn { position: fixed; bottom: 70px; left: 16px; right: 16px; background: #E65F2B; color: #fff; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: 0 4px 12px rgba(230,95,43,0.3); z-index: 50; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: block; }
+        .form-input { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 12px; font-size: 15px; font-family: inherit; }
+        .form-input:focus { outline: none; border-color: #E65F2B; }
+        .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+        .chip { padding: 10px 16px; border-radius: 12px; border: 2px solid #eee; background: #fff; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .chip.active { border-color: #E65F2B; background: #FFF0E8; color: #E65F2B; }
+        .colors { display: flex; gap: 8px; flex-wrap: wrap; }
+        .color { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #ddd; cursor: pointer; transition: all 0.2s; }
+        .color.active { border-color: #E65F2B; transform: scale(1.15); box-shadow: 0 0 0 3px rgba(230,95,43,0.3); }
+        .save-btn { width: 100%; padding: 16px; background: #E65F2B; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; font-family: inherit; cursor: pointer; margin-top: 20px; }
+        .generate-btn { width: 100%; padding: 20px; background: #E65F2B; color: #fff; border: none; border-radius: 16px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; margin-bottom: 20px; }
+        .outfit { background: #fff; border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .outfit-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .outfit-style { font-size: 18px; font-weight: 800; }
+        .outfit-items { display: flex; justify-content: space-around; }
+        .outfit-item { text-align: center; }
+        .outfit-item-name { font-size: 10px; font-weight: 600; margin-top: 4px; }
+        .outfit-save { width: 100%; padding: 12px; border: none; background: #f5f5f5; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .outfit-save.saved { background: #FFF0E8; color: #E65F2B; }
+        .tip { background: #FFF8E1; border-radius: 12px; padding: 12px; margin-bottom: 16px; font-size: 13px; color: #8D6E00; }
+        .empty { text-align: center; padding: 40px 20px; }
+        .empty-emoji { font-size: 50px; margin-bottom: 10px; }
+        .empty-text { font-size: 16px; font-weight: 700; color: #666; }
+        .upload-zone { border: 3px dashed #ddd; border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 16px; }
+        .upload-zone.has-photo { border-color: #4CAF50; background: #E8F5E9; padding: 10px; }
+        .upload-emoji { font-size: 40px; margin-bottom: 8px; }
+        .upload-text { font-size: 14px; color: #666; font-weight: 600; }
+        .upload-hint { font-size: 11px; color: #999; margin-top: 4px; }
+        .upload-input { display: none; }
+        .preview-img { max-width: 100%; max-height: 200px; border-radius: 12px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>👗 Онлайн-Гардероб</h1>
+        <p>Твій ШІ-стиліст</p>
+    </div>
+
+    <div id="section-wardrobe" class="section active">
+        <div class="filters" id="filters"></div>
+        <div style="font-size:12px;color:#999;margin-bottom:8px" id="counter"></div>
+        <div class="grid" id="wardrobe-grid"></div>
+    </div>
+
+    <div id="section-add" class="section">
+        <h2 style="font-size:20px;font-weight:800;margin-bottom:16px">📸 Новий одяг</h2>
+        
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('photo-input').click()">
+            <div class="upload-emoji" id="upload-emoji">📷</div>
+            <div class="upload-text" id="upload-text">Натисни, щоб завантажити фото</div>
+            <div class="upload-hint" id="upload-hint">Або зроби знімок камерою</div>
+            <img class="preview-img" id="preview-img">
+        </div>
+        <input type="file" class="upload-input" id="photo-input" accept="image/*" onchange="handlePhoto(event)">
+        
+        <div class="form-group">
+            <label class="form-label">Назва речі</label>
+            <input class="form-input" id="item-name" placeholder="Наприклад: Біла футболка">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Категорія</label>
+            <div class="chips" id="category-chips"></div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Колір</label>
+            <div class="colors" id="color-chips"></div>
+            <div style="text-align:center;font-size:12px;color:#999;margin-top:6px" id="color-name">Обери колір</div>
+        </div>
+        <button class="save-btn" onclick="saveItem()">💾 Зберегти в шафу</button>
+    </div>
+
+    <div id="section-stylist" class="section">
+        <div style="text-align:center;padding:20px 0">
+            <div style="font-size:40px">✨</div>
+            <h2 style="font-size:22px;font-weight:900">ШІ-Стиліст</h2>
+            <p style="font-size:13px;color:#999">Згенеруємо образи з твого гардеробу</p>
+        </div>
+        <button class="generate-btn" onclick="generateOutfits()">🪄 Згенерувати образи на сьогодні</button>
+        <div id="outfits-container"></div>
+    </div>
+
+    <div id="section-favorites" class="section">
+        <div style="text-align:center;padding:20px 0">
+            <div style="font-size:40px">❤️</div>
+            <h2 style="font-size:22px;font-weight:900">Мої улюблені луки</h2>
+        </div>
+        <div class="tip">💡 Зайди сюди вранці, обери образ і не витрачай час на примірки!</div>
+        <div id="favorites-container"></div>
+    </div>
+
+    <button class="add-btn" id="main-add-btn" onclick="showSection('add')">➕ Додати нову річ</button>
+
+    <div class="nav">
+        <button class="nav-btn active" onclick="showSection('wardrobe')">
+            <span class="icon">👗</span>
+            <span class="label">Гардероб</span>
+        </button>
+        <button class="nav-btn" onclick="showSection('add')">
+            <span class="icon">📸</span>
+            <span class="label">Додати</span>
+        </button>
+        <button class="nav-btn" onclick="showSection('stylist')">
+            <span class="icon">✨</span>
+            <span class="label">Стиліст</span>
+        </button>
+        <button class="nav-btn" onclick="showSection('favorites')">
+            <span class="icon">❤️</span>
+            <span class="label">Улюблені</span>
+        </button>
+    </div>
+
+    <script>
+        var CATS = [
+            { id: 'top', label: 'Верх', emoji: '🧥' },
+            { id: 'bottom', label: 'Низ', emoji: '👖' },
+            { id: 'shoes', label: 'Взуття', emoji: '👟' },
+            { id: 'acc', label: 'Аксесуари', emoji: '👜' }
+        ];
+        
+        var COLS = [
+            { name: 'Білий', hex: '#fff', bdr: '#ddd' },
+            { name: 'Чорний', hex: '#2D2D2D', bdr: '#2D2D2D' },
+            { name: 'Сірий', hex: '#9E9E9E', bdr: '#9E9E9E' },
+            { name: 'Синій', hex: '#1976D2', bdr: '#1976D2' },
+            { name: 'Червоний', hex: '#D32F2F', bdr: '#D32F2F' },
+            { name: 'Зелений', hex: '#388E3C', bdr: '#388E3C' },
+            { name: 'Жовтий', hex: '#FBC02D', bdr: '#FBC02D' },
+            { name: 'Рожевий', hex: '#E91E63', bdr: '#E91E63' },
+            { name: 'Коричневий', hex: '#795548', bdr: '#795548' },
+            { name: 'Бежевий', hex: '#D7CCC8', bdr: '#D7CCC8' }
+        ];
+        
+        var STYLES = [
+            { id: 'casual', name: 'Кежуал', emoji: '😎' },
+            { id: 'sport', name: 'Спортивний', emoji: '🏃' },
+            { id: 'classic', name: 'Класичний', emoji: '👔' },
+            { id: 'street', name: 'Стріт', emoji: '🔥' }
+        ];
+        
+        var EMOJIS = { top: '👕', bottom: '👖', shoes: '👟', acc: '👜' };
+        
+        var items = [];
+        var favorites = [];
+        var activeFilter = 'all';
+        var selectedCat = null;
+        var selectedCol = null;
+        var currentPhoto = null;
+
+        function loadData() {
+            try {
+                items = JSON.parse(localStorage.getItem('wardrobe_v3') || '[]');
+                favorites = JSON.parse(localStorage.getItem('wardrobe_favs_v3') || '[]');
+            } catch(e) {
+                items = [];
+                favorites = [];
+            }
+            if (items.length === 0) {
+                items = [
+                    { id: 1, name: 'Біла футболка', category: 'top', color: 'Білий', emoji: '👕' },
+                    { id: 2, name: 'Сині джинси', category: 'bottom', color: 'Синій', emoji: '👖' },
+                    { id: 3, name: 'Червоні кросівки', category: 'shoes', color: 'Червоний', emoji: '👟' }
+                ];
+                saveData();
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem('wardrobe_v3', JSON.stringify(items));
+                localStorage.setItem('wardrobe_favs_v3', JSON.stringify(favorites));
+            } catch(e) {
+                console.error('Save error:', e);
+            }
+        }
+
+        function showSection(id) {
+            var sections = document.querySelectorAll('.section');
+            for (var i = 0; i < sections.length; i++) sections[i].classList.remove('active');
+            var btns = document.querySelectorAll('.nav-btn');
+            for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+            document.getElementById('section-' + id).classList.add('active');
+            var idx = ['wardrobe','add','stylist','favorites'].indexOf(id);
+            if (idx >= 0) btns[idx].classList.add('active');
+            document.getElementById('main-add-btn').style.display = id === 'wardrobe' ? 'block' : 'none';
+            if (id === 'favorites') renderFavs();
+        }
+
+        function renderWardrobe() {
+            var filtered = activeFilter === 'all' ? items : items.filter(function(i) { return i.category === activeFilter; });
+            document.getElementById('counter').textContent = filtered.length + ' речей';
+            var html = '';
+            if (filtered.length === 0) {
+                html = '<div class="empty" style="grid-column:1/-1"><div class="empty-emoji">👗</div><div class="empty-text">Ще немає речей</div></div>';
+            } else {
+                for (var i = 0; i < filtered.length; i++) {
+                    var item = filtered[i];
+                    var content = item.image ? '<img class="card-img" src="' + item.image + '">' : '<div class="card-emoji">' + item.emoji + '</div>';
+                    html += '<div class="card" onclick="deleteItem(' + item.id + ')">' + content + '<div class="card-name">' + item.name + '</div><div class="card-color">' + item.color + '</div></div>';
+                }
+            }
+            document.getElementById('wardrobe-grid').innerHTML = html;
+        }
+
+        function renderFilters() {
+            var html = '<button class="filter ' + (activeFilter === 'all' ? 'active' : '') + '" onclick="setFilter(\'all\')">👕 Усе</button>';
+            for (var i = 0; i < CATS.length; i++) {
+                var f = CATS[i];
+                html += '<button class="filter ' + (activeFilter === f.id ? 'active' : '') + '" onclick="setFilter(\'' + f.id + '\')">' + f.emoji + ' ' + f.label + '</button>';
+            }
+            document.getElementById('filters').innerHTML = html;
+        }
+
+        function setFilter(id) { activeFilter = id; renderFilters(); renderWardrobe(); }
+
+        function deleteItem(id) {
+            if (confirm('Видалити річ?')) {
+                items = items.filter(function(i) { return i.id !== id; });
+                saveData();
+                renderWardrobe();
+            }
+        }
+
+        function renderChips() {
+            var catHtml = '';
+            for (var i = 0; i < CATS.length; i++) {
+                var c = CATS[i];
+                catHtml += '<button class="chip ' + (selectedCat === c.id ? 'active' : '') + '" onclick="selectCat(\'' + c.id + '\')">' + c.emoji + ' ' + c.label + '</button>';
+            }
+            document.getElementById('category-chips').innerHTML = catHtml;
+            
+            var colHtml = '';
+            for (var j = 0; j < COLS.length; j++) {
+                var col = COLS[j];
+                colHtml += '<button class="color ' + (selectedCol === col.name ? 'active' : '') + '" style="background:' + col.hex + ';border-color:' + col.bdr + '" onclick="selectCol(\'' + col.name + '\')"></button>';
+            }
+            document.getElementById('color-chips').innerHTML = colHtml;
+        }
+
+        function selectCat(catId) {
+            selectedCat = catId;
+            renderChips();
+        }
+
+        function selectCol(colName) {
+            selectedCol = colName;
+            document.getElementById('color-name').textContent = colName;
+            renderChips();
+        }
+
+        function handlePhoto(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                currentPhoto = e.target.result;
+                document.getElementById('preview-img').src = currentPhoto;
+                document.getElementById('preview-img').style.display = 'block';
+                document.getElementById('upload-zone').classList.add('has-photo');
+                document.getElementById('upload-emoji').style.display = 'none';
+                document.getElementById('upload-text').style.display = 'none';
+                document.getElementById('upload-hint').style.display = 'none';
+                
+                // Auto-detect color
+                detectColor(currentPhoto);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function detectColor(uri) {
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                canvas.width = 50;
+                canvas.height = 50;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, 50, 50);
+                var data = ctx.getImageData(0, 0, 50, 50).data;
+                var r = 0, g = 0, b = 0, n = 0;
+                for (var i = 0; i < data.length; i += 16) {
+                    r += data[i]; g += data[i+1]; b += data[i+2]; n++;
+                }
+                r = Math.round(r/n); g = Math.round(g/n); b = Math.round(b/n);
+                
+                var colors = [
+                    {name:'Білий',r:245,g:245,b:245},{name:'Чорний',r:40,g:40,b:40},
+                    {name:'Сірий',r:140,g:140,b:140},{name:'Червоний',r:200,g:50,b:50},
+                    {name:'Синій',r:50,g:90,b:180},{name:'Зелений',r:60,g:140,b:60},
+                    {name:'Жовтий',r:240,g:210,b:30},{name:'Рожевий',r:240,g:140,b:170},
+                    {name:'Коричневий',r:130,g:80,b:40},{name:'Бежевий',r:200,g:185,b:160}
+                ];
+                var best = 'Білий'; var min = 999999;
+                for (var j = 0; j < colors.length; j++) {
+                    var c = colors[j];
+                    var d = Math.sqrt(Math.pow(r-c.r,2)+Math.pow(g-c.g,2)+Math.pow(b-c.b,2));
+                    if (d < min) { min = d; best = c.name; }
+                }
+                selectedCol = best;
+                document.getElementById('color-name').textContent = best;
+                renderChips();
+            };
+            img.src = uri;
+        }
+
+        function saveItem() {
+            var name = document.getElementById('item-name').value.trim();
+            
+            if (!name) {
+                alert('Введи назву речі');
+                return;
+            }
+            if (!selectedCat) {
+                alert('Обери категорію');
+                return;
+            }
+            if (!selectedCol) {
+                alert('Обери колір');
+                return;
+            }
+            
+            var newItem = {
+                id: Date.now(),
+                name: name,
+                category: selectedCat,
+                color: selectedCol,
+                emoji: EMOJIS[selectedCat],
+                image: currentPhoto
+            };
+            
+            items.unshift(newItem);
+            saveData();
+            
+            alert('✅ Додано: ' + name);
+            
+            // Reset form
+            document.getElementById('item-name').value = '';
+            document.getElementById('preview-img').style.display = 'none';
+            document.getElementById('preview-img').src = '';
+            document.getElementById('upload-zone').classList.remove('has-photo');
+            document.getElementById('upload-emoji').style.display = 'block';
+            document.getElementById('upload-text').style.display = 'block';
+            document.getElementById('upload-hint').style.display = 'block';
+            selectedCat = null;
+            selectedCol = null;
+            currentPhoto = null;
+            document.getElementById('color-name').textContent = 'Обери колір';
+            document.getElementById('photo-input').value = '';
+            renderChips();
+            renderWardrobe();
+            showSection('wardrobe');
+        }
+
+        function generateOutfits() {
+            var container = document.getElementById('outfits-container');
+            container.innerHTML = '<div style="text-align:center;padding:20px"><div style="font-size:30px">⏳</div><p style="color:#E65F2B;font-weight:700">ШІ підбирає образи...</p></div>';
+            
+            setTimeout(function() {
+                var tops = items.filter(function(i) { return i.category === 'top'; });
+                var bottoms = items.filter(function(i) { return i.category === 'bottom'; });
+                var shoes = items.filter(function(i) { return i.category === 'shoes'; });
+                
+                if (tops.length === 0 || bottoms.length === 0) {
+                    container.innerHTML = '<div class="empty"><div class="empty-emoji">🧩</div><div class="empty-text">Додай хоча б Верх і Низ</div></div>';
+                    return;
+                }
+                
+                var html = '';
+                for (var idx = 0; idx < 3; idx++) {
+                    var style = STYLES[idx];
+                    var t = tops[idx % tops.length];
+                    var b = bottoms[idx % bottoms.length];
+                    var s = shoes[idx % shoes.length] || null;
+                    var isSaved = favorites.some(function(f) { return f.id === idx; });
+                    
+                    html += '<div class="outfit">';
+                    html += '<div class="outfit-header"><span style="font-size:24px">' + style.emoji + '</span><span class="outfit-style">' + style.name + '</span></div>';
+                    html += '<div class="outfit-items">';
+                    html += '<div class="outfit-item"><div style="font-size:32px">' + t.emoji + '</div><div class="outfit-item-name">' + t.name + '</div></div>';
+                    html += '<div class="outfit-item"><div style="font-size:32px">' + b.emoji + '</div><div class="outfit-item-name">' + b.name + '</div></div>';
+                    if (s) html += '<div class="outfit-item"><div style="font-size:32px">' + s.emoji + '</div><div class="outfit-item-name">' + s.name + '</div></div>';
+                    html += '</div>';
+                    html += '<button class="outfit-save ' + (isSaved ? 'saved' : '') + '" onclick="toggleFav(' + idx + ')">' + (isSaved ? '❤️ Збережено' : '🤍 Зберегти образ') + '</button>';
+                    html += '</div>';
+                }
+                container.innerHTML = html;
+            }, 1500);
+        }
+
+        function toggleFav(id) {
+            var idx = favorites.findIndex(function(f) { return f.id === id; });
+            if (idx >= 0) {
+                favorites.splice(idx, 1);
+            } else {
+                var tops = items.filter(function(i) { return i.category === 'top'; });
+                var bottoms = items.filter(function(i) { return i.category === 'bottom'; });
+                var shoes = items.filter(function(i) { return i.category === 'shoes'; });
+                var style = STYLES[id];
+                if (style && tops.length && bottoms.length) {
+                    favorites.push({
+                        id: id,
+                        styleName: style.name,
+                        styleEmoji: style.emoji,
+                        items: [tops[id % tops.length], bottoms[id % bottoms.length], shoes[id % shoes.length]].filter(Boolean)
+                    });
+                }
+            }
+            saveData();
+            generateOutfits();
+        }
+
+        function renderFavs() {
+            var container = document.getElementById('favorites-container');
+            if (favorites.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-emoji">💔</div><div class="empty-text">Ще немає улюблених</div></div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < favorites.length; i++) {
+                var f = favorites[i];
+                html += '<div class="outfit"><div class="outfit-header"><span style="font-size:24px">' + f.styleEmoji + '</span><span class="outfit-style">' + f.styleName + '</span></div><div class="outfit-items">';
+                for (var j = 0; j < f.items.length; j++) {
+                    html += '<div class="outfit-item"><div style="font-size:32px">' + f.items[j].emoji + '</div><div class="outfit-item-name">' + f.items[j].name + '</div></div>';
+                }
+                html += '</div></div>';
+            }
+            container.innerHTML = html;
+        }
+        
+        loadData();
+        renderFilters();
+        renderWardrobe();
+        renderChips();
+    </script>
+</body>
+</html>
