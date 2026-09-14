@@ -407,9 +407,9 @@
                     html += '<div class="outfit">';
                     html += '<div class="outfit-header"><span style="font-size:24px">' + style.emoji + '</span><span class="outfit-style">' + style.name + '</span></div>';
                     html += '<div class="outfit-items">';
-                    html += '<div class="outfit-item"><div style="font-size:32px">' + t.emoji + '</div><div class="outfit-item-name">' + t.name + '</div></div>';
-                    html += '<div class="outfit-item"><div style="font-size:32px">' + b.emoji + '</div><div class="outfit-item-name">' + b.name + '</div></div>';
-                    if (s) html += '<div class="outfit-item"><div style="font-size:32px">' + s.emoji + '</div><div class="outfit-item-name">' + s.name + '</div></div>';
+                    if (t.image) { html += '<div class="outfit-item"><img src="' + t.image + '" style="width:50px;height:50px;border-radius:8px;object-fit:cover"><div class="outfit-item-name">' + t.name + '</div></div>'; } else { html += '<div class="outfit-item"><div style="font-size:32px">' + t.emoji + '</div><div class="outfit-item-name">' + t.name + '</div></div>'; }
+                    if (b.image) { html += '<div class="outfit-item"><img src="' + b.image + '" style="width:50px;height:50px;border-radius:8px;object-fit:cover"><div class="outfit-item-name">' + b.name + '</div></div>'; } else { html += '<div class="outfit-item"><div style="font-size:32px">' + b.emoji + '</div><div class="outfit-item-name">' + b.name + '</div></div>'; }
+                    if (s) { if (s.image) { html += '<div class="outfit-item"><img src="' + s.image + '" style="width:50px;height:50px;border-radius:8px;object-fit:cover"><div class="outfit-item-name">' + s.name + '</div></div>'; } else { html += '<div class="outfit-item"><div style="font-size:32px">' + s.emoji + '</div><div class="outfit-item-name">' + s.name + '</div></div>'; } }
                     html += '</div>';
                     html += '<button class="outfit-save ' + (isSaved ? 'saved' : '') + '" onclick="toggleFav(' + idx + ')">' + (isSaved ? '❤️ Збережено' : '🤍 Зберегти образ') + '</button>';
                     html += '</div>';
@@ -451,7 +451,8 @@
                 var f = favorites[i];
                 html += '<div class="outfit"><div class="outfit-header"><span style="font-size:24px">' + f.styleEmoji + '</span><span class="outfit-style">' + f.styleName + '</span></div><div class="outfit-items">';
                 for (var j = 0; j < f.items.length; j++) {
-                    html += '<div class="outfit-item"><div style="font-size:32px">' + f.items[j].emoji + '</div><div class="outfit-item-name">' + f.items[j].name + '</div></div>';
+                    var item = f.items[j];
+                    if (item.image) { html += '<div class="outfit-item"><img src="' + item.image + '" style="width:50px;height:50px;border-radius:8px;object-fit:cover"><div class="outfit-item-name">' + item.name + '</div></div>'; } else { html += '<div class="outfit-item"><div style="font-size:32px">' + item.emoji + '</div><div class="outfit-item-name">' + item.name + '</div></div>'; }
                 }
                 html += '</div></div>';
             }
